@@ -1,0 +1,24 @@
+{
+  "name": "La Pilarica",
+  "short_name": "Pilarica",
+  "description": "Sistema de gestión — La Pilarica",
+  "start_url": "/la-pilarica/",
+  "display": "standalone",
+  "background_color": "#080B16",
+  "theme_color": "#080B16",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
