@@ -1083,6 +1083,15 @@ label[data-tooltip]{cursor:help;}
         <div style="font-size:13px;color:var(--texto2);">Cargando...</div>
       </div>
     </div>
+
+    <div class="card" style="border:1px solid rgba(180,160,216,.25);">
+      <div class="card-title"><span>🎭</span> Datos de demostración</div>
+      <p style="font-size:13px;color:var(--texto2);margin-bottom:16px;line-height:1.7;">Cargá datos de ejemplo para ver la app en acción. Útil para capturas o demos. Podés borrarlos cuando quieras y empezar con datos reales.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-amarillo" onclick="cargarDatosDemo()">✨ Cargar datos demo</button>
+        <button class="btn btn-rojo" onclick="resetearTodo()">🗑️ Borrar todo y empezar de cero</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -2694,6 +2703,157 @@ function procesarVentaRapida() {
   const ventaRap = db.ventas.find(v=>v.id===idV);
   const detallesRap = db.detalleVentas.filter(d=>d.idVenta===idV);
   mostrarTicket(ventaRap, detallesRap);
+}
+
+// ============================================================
+// DATOS DEMO
+// ============================================================
+function cargarDatosDemo() {
+  if(db.productos.length > 0 || db.ventas.length > 0) {
+    if(!confirm('Ya hay datos cargados. ¿Querés reemplazarlos con los datos demo?')) return;
+  }
+
+  const prods = [
+    { id:'P01', nombre:'Rosario San Judas Tadeo', categoria:'Rosarios', variante:'Madera marrón / 45cm', proveedor:'Mayorista Ángeles', costo:900, precioVenta:2500, stockMinimo:5 },
+    { id:'P02', nombre:'Rosario nácar blanco', categoria:'Rosarios', variante:'Nácar / 40cm', proveedor:'Mayorista Ángeles', costo:1100, precioVenta:3200, stockMinimo:4 },
+    { id:'P03', nombre:'Medalla Virgen María', categoria:'Medallas', variante:'Plata 925 / 2cm', proveedor:'Joyería San Marcos', costo:1800, precioVenta:4500, stockMinimo:8 },
+    { id:'P04', nombre:'Medalla San Cristóbal', categoria:'Medallas', variante:'Acero inoxidable', proveedor:'Joyería San Marcos', costo:1400, precioVenta:3600, stockMinimo:6 },
+    { id:'P05', nombre:'Crucifijo de pared', categoria:'Cruces y crucifijos', variante:'Madera tallada / 25cm', proveedor:'Artesanías del Norte', costo:2800, precioVenta:6800, stockMinimo:3 },
+    { id:'P06', nombre:'Imagen San Expedito', categoria:'Imágenes y estatuillas', variante:'Resina / 15cm', proveedor:'Artesanías del Norte', costo:2100, precioVenta:5200, stockMinimo:4 },
+    { id:'P07', nombre:'Imagen Virgen de Luján', categoria:'Imágenes y estatuillas', variante:'Resina pintada / 20cm', proveedor:'Artesanías del Norte', costo:2600, precioVenta:6500, stockMinimo:3 },
+    { id:'P08', nombre:'Vela votiva blanca x3', categoria:'Velas y velones', variante:'Pack x3 unidades', proveedor:'Distribuidora Sur', costo:300, precioVenta:850, stockMinimo:15 },
+    { id:'P09', nombre:'Vela 7 días multicolor', categoria:'Velas y velones', variante:'Colores surtidos', proveedor:'Distribuidora Sur', costo:550, precioVenta:1500, stockMinimo:10 },
+    { id:'P10', nombre:'Incienso mirra natural', categoria:'Inciensos y aromas', variante:'Caja x20 varillas', proveedor:'Distribuidora Sur', costo:450, precioVenta:1200, stockMinimo:12 },
+    { id:'P11', nombre:'Pulsera rosario celeste', categoria:'Pulseras religiosas', variante:'Piedras celestes / elástica', proveedor:'Mayorista Ángeles', costo:650, precioVenta:1800, stockMinimo:10 },
+    { id:'P12', nombre:'Llavero cruz plateada', categoria:'Llaveros religiosos', variante:'Plateado / 5cm', proveedor:'Mayorista Ángeles', costo:380, precioVenta:1100, stockMinimo:15 },
+    { id:'P13', nombre:'Escapulario Virgen del Carmen', categoria:'Escapularios', variante:'Tela marrón bordada', proveedor:'Mayorista Ángeles', costo:800, precioVenta:2200, stockMinimo:8 },
+    { id:'P14', nombre:'Pesebre cerámica 7 piezas', categoria:'Pesebres y nacimientos', variante:'Cerámica pintada a mano', proveedor:'Artesanías del Norte', costo:4800, precioVenta:12500, stockMinimo:2 },
+    { id:'P15', nombre:'Cuadro Sagrado Corazón', categoria:'Cuadros religiosos', variante:'Impresión enmarcada / 30x40cm', proveedor:'Artesanías del Norte', costo:3500, precioVenta:8900, stockMinimo:3 },
+  ];
+
+  // Stock inicial via movimientos
+  const movs = prods.map((p,i) => ({
+    id:'MOV-'+(i+1), fecha:'2026-02-01', tipo:'Entrada', idProducto:p.id,
+    cantidad: p.stockMinimo * 4, ref:'COMPRA-INICIAL', nota:'Stock inicial demo'
+  }));
+
+  // Proveedor demo
+  const proveedores = [
+    { id:'PROV-1', nombre:'Mayorista Ángeles', contacto:'011-4444-5555', email:'ventas@angeles.com', notas:'Entrega los lunes' },
+    { id:'PROV-2', nombre:'Joyería San Marcos', contacto:'011-3333-2222', email:'', notas:'Pedir con 1 semana de anticipación' },
+    { id:'PROV-3', nombre:'Artesanías del Norte', contacto:'0387-111-2222', email:'', notas:'Envío por Andreani' },
+    { id:'PROV-4', nombre:'Distribuidora Sur', contacto:'011-5555-6666', email:'', notas:'Pedido mínimo $15.000' },
+  ];
+
+  // Ventas marzo 2026 (mes anterior)
+  const ventasMar = [
+    { fecha:'2026-03-03', canal:'Presencial', cliente:'María González', medio:'Efectivo',   items:[{p:'P01',q:2},{p:'P08',q:3}] },
+    { fecha:'2026-03-05', canal:'WhatsApp',   cliente:'Ana Rodríguez',   medio:'Transferencia', items:[{p:'P03',q:1},{p:'P11',q:2}] },
+    { fecha:'2026-03-07', canal:'Presencial', cliente:'',                medio:'Efectivo',   items:[{p:'P12',q:4},{p:'P08',q:2}] },
+    { fecha:'2026-03-10', canal:'Instagram',  cliente:'Laura Díaz',      medio:'Mercado Pago QR', items:[{p:'P07',q:1},{p:'P10',q:2}] },
+    { fecha:'2026-03-12', canal:'Presencial', cliente:'',                medio:'Débito',     items:[{p:'P05',q:1},{p:'P13',q:1}] },
+    { fecha:'2026-03-15', canal:'WhatsApp',   cliente:'Carmen López',    medio:'Transferencia', items:[{p:'P14',q:1}] },
+    { fecha:'2026-03-18', canal:'Presencial', cliente:'',                medio:'Efectivo',   items:[{p:'P02',q:1},{p:'P09',q:2},{p:'P12',q:3}] },
+    { fecha:'2026-03-20', canal:'Instagram',  cliente:'Rosa Martínez',   medio:'Mercado Pago Link', items:[{p:'P15',q:1}] },
+    { fecha:'2026-03-22', canal:'Presencial', cliente:'',                medio:'Efectivo',   items:[{p:'P04',q:1},{p:'P06',q:1}] },
+    { fecha:'2026-03-25', canal:'WhatsApp',   cliente:'Susana Pérez',    medio:'Transferencia', items:[{p:'P03',q:2},{p:'P11',q:1}] },
+    { fecha:'2026-03-28', canal:'Presencial', cliente:'',                medio:'Crédito 1 cuota', items:[{p:'P07',q:1},{p:'P08',q:4}] },
+  ];
+
+  // Ventas abril 2026 (mes actual)
+  const ventasAbr = [
+    { fecha:'2026-04-01', canal:'Presencial', cliente:'Elena Sosa',      medio:'Efectivo',   items:[{p:'P01',q:1},{p:'P10',q:2}] },
+    { fecha:'2026-04-02', canal:'WhatsApp',   cliente:'Mirta Flores',    medio:'Transferencia', items:[{p:'P06',q:1},{p:'P12',q:2}] },
+    { fecha:'2026-04-03', canal:'Instagram',  cliente:'Patricia Ruiz',   medio:'Mercado Pago QR', items:[{p:'P15',q:1}] },
+    { fecha:'2026-04-04', canal:'Presencial', cliente:'',                medio:'Efectivo',   items:[{p:'P08',q:5},{p:'P09',q:2}] },
+    { fecha:'2026-04-05', canal:'WhatsApp',   cliente:'Norma Castro',    medio:'Transferencia', items:[{p:'P03',q:1},{p:'P13',q:2}] },
+    { fecha:'2026-04-06', canal:'Presencial', cliente:'',                medio:'Débito',     items:[{p:'P02',q:1},{p:'P04',q:1},{p:'P11',q:2}] },
+    { fecha:'2026-04-07', canal:'WhatsApp',   cliente:'Gloria Herrera',  medio:'Mercado Pago Link', items:[{p:'P07',q:1},{p:'P05',q:1}] },
+  ];
+
+  let cntV=0, cntDv=0, cntM=movs.length, cntCaj=0;
+
+  function buildVentas(lista) {
+    const ventasArr=[], dvArr=[], movArr=[], cajArr=[];
+    lista.forEach(v => {
+      cntV++;
+      const idV='VTA-'+String(cntV).padStart(4,'0');
+      let total=0;
+      const items=v.items.map(it=>{
+        const prod=prods.find(p=>p.id===it.p);
+        const sub=prod.precioVenta*it.q;
+        total+=sub;
+        cntDv++;
+        return { id:'DV-'+cntDv, idVenta:idV, idProducto:it.p, nombre:prod.nombre, cantidad:it.q, precioUnit:prod.precioVenta, costoUnit:prod.costo, subtotal:sub };
+      });
+      ventasArr.push({ id:idV, fecha:v.fecha, canal:v.canal, cliente:v.cliente, medioPago:v.medio, total, estado:'Cobrada', notas:'' });
+      dvArr.push(...items);
+      items.forEach(it=>{ cntM++; movArr.push({ id:'MOV-'+cntM, fecha:v.fecha, tipo:'Salida', idProducto:it.idProducto, cantidad:it.cantidad, ref:idV, nota:'Venta' }); });
+      cntCaj++;
+      cajArr.push({ id:'CAJ-'+cntCaj, fecha:v.fecha, tipo:'Ingreso', categoria:'Venta cobrada', descripcion:`Venta ${idV}`, monto:total, ref:idV });
+    });
+    return { ventasArr, dvArr, movArr, cajArr };
+  }
+
+  const mar = buildVentas(ventasMar);
+  const abr = buildVentas(ventasAbr);
+
+  // Compras
+  const compras = [
+    { id:'CMP-0001', fecha:'2026-02-15', proveedor:'Mayorista Ángeles', total:28500, notas:'Reposición mensual', items:[
+      {id:'DC-1',idC:'CMP-0001',idP:'P01',nombre:'Rosario San Judas Tadeo',cantidad:20,costo:900,subtotal:18000},
+      {id:'DC-2',idC:'CMP-0001',idP:'P11',nombre:'Pulsera rosario celeste',cantidad:15,costo:650,subtotal:9750},
+      {id:'DC-3',idC:'CMP-0001',idP:'P12',nombre:'Llavero cruz plateada',cantidad:20,costo:380,subtotal:7600},
+    ]},
+    { id:'CMP-0002', fecha:'2026-03-10', proveedor:'Artesanías del Norte', total:42000, notas:'Pedido de estatuillas', items:[
+      {id:'DC-4',idC:'CMP-0002',idP:'P06',nombre:'Imagen San Expedito',cantidad:10,costo:2100,subtotal:21000},
+      {id:'DC-5',idC:'CMP-0002',idP:'P07',nombre:'Imagen Virgen de Luján',cantidad:8,costo:2600,subtotal:20800},
+    ]},
+  ];
+  const detalleCompras = compras.flatMap(c=>c.items.map(i=>({ id:i.id, idCompra:i.idC, idProducto:i.idP, nombre:i.nombre, cantidad:i.cantidad, costoUnit:i.costo, subtotal:i.subtotal })));
+  let cntMov2=cntM;
+  const movsCompras = compras.flatMap(c=>c.items.map(it=>{ cntMov2++; return { id:'MOV-'+cntMov2, fecha:c.fecha, tipo:'Entrada', idProducto:it.idP, cantidad:it.cantidad, ref:c.id, nota:'Compra' }; }));
+  cntCaj++;
+  const cajCompras = compras.map((c,i)=>({ id:'CAJ-'+(cntCaj+i), fecha:c.fecha, tipo:'Egreso', categoria:'Compra pagada', descripcion:`Compra ${c.id}`, monto:c.total, ref:c.id }));
+  cntCaj+=compras.length;
+  cntM=cntMov2;
+
+  // Gastos operativos
+  const gastosOp = [
+    { id:'CAJ-'+(cntCaj+1), fecha:'2026-03-01', tipo:'Egreso', categoria:'Alquiler', descripcion:'Alquiler marzo', monto:45000, ref:'' },
+    { id:'CAJ-'+(cntCaj+2), fecha:'2026-03-05', tipo:'Egreso', categoria:'Servicios (luz, internet)', descripcion:'Servicios marzo', monto:8200, ref:'' },
+    { id:'CAJ-'+(cntCaj+3), fecha:'2026-03-15', tipo:'Egreso', categoria:'Embalaje', descripcion:'Bolsas y papel de regalo', monto:3500, ref:'' },
+    { id:'CAJ-'+(cntCaj+4), fecha:'2026-04-01', tipo:'Egreso', categoria:'Alquiler', descripcion:'Alquiler abril', monto:45000, ref:'' },
+    { id:'CAJ-'+(cntCaj+5), fecha:'2026-04-03', tipo:'Egreso', categoria:'Publicidad', descripcion:'Instagram Ads abril', monto:5000, ref:'' },
+    { id:'CAJ-'+(cntCaj+6), fecha:'2026-02-01', tipo:'Ingreso', categoria:'Aporte personal', descripcion:'Capital inicial Lucila', monto:150000, ref:'' },
+  ];
+
+  // Armar db completa
+  db.productos = prods;
+  db.proveedores = proveedores;
+  db.ventas = [...mar.ventasArr, ...abr.ventasArr];
+  db.detalleVentas = [...mar.dvArr, ...abr.dvArr];
+  db.movimientos = [...movs, ...mar.movArr, ...abr.movArr, ...movsCompras];
+  db.compras = compras.map(c=>({ id:c.id, fecha:c.fecha, proveedor:c.proveedor, total:c.total, estado:'Pagada', notas:c.notas }));
+  db.detalleCompras = detalleCompras;
+  db.caja = [...mar.cajArr, ...abr.cajArr, ...cajCompras, ...gastosOp];
+  db.contadores = { venta:cntV, compra:2, gasto:0, mov:cntM, prod:15, caja:cntCaj+6, dv:cntDv };
+
+  guardarDB();
+  toast('✅ Datos demo cargados — ¡a sacar capturas!', 'verde', 3500);
+  renderDashboard();
+  irA('dashboard');
+}
+
+function resetearTodo() {
+  if(!confirm('⚠️ Esto borra TODOS los datos. ¿Estás segura?')) return;
+  db.productos=[]; db.ventas=[]; db.detalleVentas=[]; db.gastos=[]; db.compras=[];
+  db.detalleCompras=[]; db.movimientos=[]; db.proveedores=[]; db.caja=[];
+  db.contadores={ venta:0, compra:0, gasto:0, mov:0, prod:0, caja:0 };
+  guardarDB();
+  toast('🗑️ Base de datos reseteada', 'rojo', 3000);
+  renderDashboard();
+  irA('dashboard');
 }
 </script>
 </body>
