@@ -1160,6 +1160,78 @@ label[data-tooltip]{cursor:help;}
   </div>
 </div>
 
+<!-- Modal Editar Producto -->
+<div class="modal-overlay" id="modal-edit-prod" onclick="if(event.target===this)$id('modal-edit-prod').classList.remove('open')">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-title">✏️ Editar producto</div>
+    <input type="hidden" id="edit-prod-id">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Nombre del producto</label>
+        <input type="text" id="edit-prod-nombre">
+      </div>
+      <div class="form-group">
+        <label>Categoría</label>
+        <select id="edit-prod-categoria"></select>
+      </div>
+      <div class="form-group">
+        <label>Variante (color, tamaño, material)</label>
+        <input type="text" id="edit-prod-variante" placeholder="Ej: Madera marrón / 45cm">
+      </div>
+      <div class="form-group">
+        <label>Proveedor</label>
+        <input type="text" id="edit-prod-proveedor">
+      </div>
+      <div class="form-group">
+        <label>Costo unitario ($)</label>
+        <input type="number" id="edit-prod-costo" min="0">
+      </div>
+      <div class="form-group">
+        <label>Precio de venta ($)</label>
+        <input type="number" id="edit-prod-precio" min="0">
+      </div>
+      <div class="form-group">
+        <label>Stock mínimo (alerta)</label>
+        <input type="number" id="edit-prod-stockmin" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-rojo" onclick="$id('modal-edit-prod').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-amarillo" onclick="guardarEditProducto()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Proveedor -->
+<div class="modal-overlay" id="modal-edit-prov" onclick="if(event.target===this)$id('modal-edit-prov').classList.remove('open')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">✏️ Editar proveedor</div>
+    <input type="hidden" id="edit-prov-idx">
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Nombre</label>
+        <input type="text" id="edit-prov-nombre">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input type="text" id="edit-prov-tel">
+      </div>
+      <div class="form-group">
+        <label>Ciudad</label>
+        <input type="text" id="edit-prov-ciudad">
+      </div>
+      <div class="form-group" style="grid-column:1/-1;">
+        <label>Condición de pago</label>
+        <input type="text" id="edit-prov-condicion" placeholder="Ej: 30 días, contado, etc.">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-rojo" onclick="$id('modal-edit-prov').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-amarillo" onclick="guardarEditProveedor()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Ticket WhatsApp -->
 <div class="modal-overlay" id="modal-ticket" onclick="if(event.target===this)$id('modal-ticket').classList.remove('open')">
   <div class="modal" style="max-width:420px;">
@@ -1394,7 +1466,7 @@ function renderTablaProductos() {
         <td>${fmtPeso(p.precio)}</td>
         <td><span class="${margen>=40?'pos':margen>=20?'neu':'neg'}">${margen}%</span></td>
         <td>${stock} ${badgeEstado(est)}</td>
-        <td><button class="btn btn-rojo btn-sm" onclick="eliminarProducto('${p.id}')">✕</button></td>
+        <td style="display:flex;gap:4px;"><button class="btn btn-sm" style="background:rgba(122,174,232,.15);color:var(--celeste);border:1px solid rgba(122,174,232,.3);" onclick="abrirEditProducto('${p.id}')">✏️</button><button class="btn btn-rojo btn-sm" onclick="eliminarProducto('${p.id}')">✕</button></td>
       </tr>`;
     }).join('')+
     `</tbody></table>`;
@@ -1886,7 +1958,7 @@ function renderTablaProveedores() {
   $id('tabla-proveedores').innerHTML = db.proveedores.length===0
     ? '<p style="color:var(--texto2);font-size:13px;padding:10px;">No hay proveedores cargados.</p>'
     : `<table><thead><tr><th>Nombre</th><th>Teléfono</th><th>Ciudad</th><th>Condición pago</th><th></th></tr></thead><tbody>`+
-      db.proveedores.map((p,i)=>`<tr><td>${p.nombre}</td><td>${p.tel||'-'}</td><td>${p.ciudad||'-'}</td><td>${p.condicion||'-'}</td><td><button class="btn btn-rojo btn-sm" onclick="eliminarProveedor(${i})">✕</button></td></tr>`).join('')+'</tbody></table>';
+      db.proveedores.map((p,i)=>`<tr><td>${p.nombre}</td><td>${p.tel||'-'}</td><td>${p.ciudad||'-'}</td><td>${p.condicion||'-'}</td><td style="display:flex;gap:4px;"><button class="btn btn-sm" style="background:rgba(122,174,232,.15);color:var(--celeste);border:1px solid rgba(122,174,232,.3);" onclick="abrirEditProveedor(${i})">✏️</button><button class="btn btn-rojo btn-sm" onclick="eliminarProveedor(${i})">✕</button></td></tr>`).join('')+'</tbody></table>';
 }
 
 function eliminarProveedor(i) {
@@ -2843,6 +2915,83 @@ function cargarDatosDemo() {
   toast('✅ Datos demo cargados — ¡a sacar capturas!', 'verde', 3500);
   renderDashboard();
   irA('dashboard');
+}
+
+// ============================================================
+// EDITAR PRODUCTO
+// ============================================================
+function abrirEditProducto(id) {
+  const p = db.productos.find(x=>x.id===id);
+  if(!p) return;
+  $id('edit-prod-id').value = id;
+  $id('edit-prod-nombre').value = p.nombre||'';
+  $id('edit-prod-variante').value = p.variante||'';
+  $id('edit-prod-proveedor').value = p.proveedor||'';
+  $id('edit-prod-costo').value = p.costo||0;
+  $id('edit-prod-precio').value = p.precio||p.precioVenta||0;
+  $id('edit-prod-stockmin').value = p.stockMin||p.stockMinimo||5;
+  // Poblar categorías
+  const sel = $id('edit-prod-categoria');
+  sel.innerHTML = db.categorias.map(c=>`<option${c===p.categoria?' selected':''}>${c}</option>`).join('');
+  $id('modal-edit-prod').classList.add('open');
+}
+
+function guardarEditProducto() {
+  const id = $id('edit-prod-id').value;
+  const idx = db.productos.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  const nombre = $id('edit-prod-nombre').value.trim();
+  if(!nombre) return toast('El nombre no puede estar vacío', 'rojo');
+  db.productos[idx] = {
+    ...db.productos[idx],
+    nombre,
+    categoria: $id('edit-prod-categoria').value,
+    variante: $id('edit-prod-variante').value,
+    proveedor: $id('edit-prod-proveedor').value,
+    costo: parseFloat($id('edit-prod-costo').value)||0,
+    precio: parseFloat($id('edit-prod-precio').value)||0,
+    precioVenta: parseFloat($id('edit-prod-precio').value)||0,
+    stockMin: parseInt($id('edit-prod-stockmin').value)||5,
+    stockMinimo: parseInt($id('edit-prod-stockmin').value)||5,
+  };
+  guardarDB();
+  $id('modal-edit-prod').classList.remove('open');
+  renderTablaProductos();
+  toast('✅ Producto actualizado', 'verde');
+}
+
+// ============================================================
+// EDITAR PROVEEDOR
+// ============================================================
+function abrirEditProveedor(i) {
+  const p = db.proveedores[i];
+  if(!p) return;
+  $id('edit-prov-idx').value = i;
+  $id('edit-prov-nombre').value = p.nombre||'';
+  $id('edit-prov-tel').value = p.tel||'';
+  $id('edit-prov-ciudad').value = p.ciudad||'';
+  $id('edit-prov-condicion').value = p.condicion||'';
+  $id('modal-edit-prov').classList.add('open');
+}
+
+function guardarEditProveedor() {
+  const i = parseInt($id('edit-prov-idx').value);
+  if(isNaN(i) || !db.proveedores[i]) return;
+  const nombre = $id('edit-prov-nombre').value.trim();
+  if(!nombre) return toast('El nombre no puede estar vacío', 'rojo');
+  db.proveedores[i] = {
+    ...db.proveedores[i],
+    nombre,
+    tel: $id('edit-prov-tel').value,
+    ciudad: $id('edit-prov-ciudad').value,
+    condicion: $id('edit-prov-condicion').value,
+  };
+  guardarDB();
+  $id('modal-edit-prov').classList.remove('open');
+  renderTablaProveedores();
+  poblarSelectProveedores('c-proveedor');
+  poblarSelectProveedores('p-proveedor');
+  toast('✅ Proveedor actualizado', 'verde');
 }
 
 function resetearTodo() {
