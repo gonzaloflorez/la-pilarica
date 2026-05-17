@@ -1915,7 +1915,7 @@ function renderTablaCompras() {
   const compras = [...db.compras].reverse();
   $id('tabla-compras').innerHTML = compras.length===0
     ? '<p style="color:var(--texto2);font-size:13px;padding:10px;">No hay compras registradas.</p>'
-    : `<table><thead><tr><th>ID</th><th>Fecha</th><th>Proveedor</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Vencimiento</th><th>Estado</th></tr></thead><tbody>`+
+    : `<table><thead><tr><th>ID</th><th>Fecha</th><th>Proveedor</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Vencimiento</th><th>Estado</th><th>Notas</th><th></th></tr></thead><tbody>`+
       compras.map(c=>{
         const hoy = new Date().toISOString().slice(0,10);
         const vencida = c.estado!=='Pagada' && c.vencimiento && c.vencimiento<hoy;
@@ -1925,9 +1925,40 @@ function renderTablaCompras() {
           <td>${fmtPeso(c.total)}</td><td class="pos">${fmtPeso(c.pagado)}</td>
           <td class="${c.saldo>0?'neg':''}">${fmtPeso(c.saldo)}</td>
           <td class="${vencida?'neg':''}">${fmtFecha(c.vencimiento)||'-'}</td>
-          <td>${badgeEstado(c.estado)}${vencida?' <span style="color:var(--rojo);font-size:11px;">⛔ Vencida</span>':''}</td>
+          <td style="display:flex;gap:6px;align-items:center;">
+            <select onchange="cambiarEstadoCompra('${c.id}', this.value)" style="background:rgba(10,8,26,.85);border:1px solid rgba(180,160,216,.22);color:var(--texto);border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;outline:none;">
+              <option value="Pendiente" ${c.estado==='Pendiente'?'selected':''}>⏳ Pendiente</option>
+              <option value="Pagada" ${c.estado==='Pagada'?'selected':''}>✅ Pagada</option>
+              <option value="Vencida" ${c.estado==='Vencida'?'selected':''}>⛔ Vencida</option>
+            </select>
+            ${vencida?' <span style="color:var(--rojo);font-size:11px;">⛔</span>':''}
+          </td>
+          <td style="color:var(--texto2);font-size:12px;max-width:160px;">${c.notas||'-'}</td>
+          <td><button class="btn btn-rojo btn-sm" onclick="eliminarCompra('${c.id}')" title="Eliminar compra">🗑️</button></td>
         </tr>`;
       }).join('')+'</tbody></table>';
+}
+
+function cambiarEstadoCompra(id, nuevoEstado) {
+  const compra = db.compras.find(c=>c.id===id);
+  if(!compra) return;
+  compra.estado = nuevoEstado;
+  guardarDB();
+  renderTablaCompras();
+  renderComprasKPIs();
+}
+
+function eliminarCompra(id) {
+  if(!confirm(`¿Eliminar la compra ${id}?\nSe revertirá el stock y cualquier movimiento de caja asociado.`)) return;
+  const compra = db.compras.find(c=>c.id===id);
+  if(!compra) return;
+  db.movimientos = db.movimientos.filter(m=>m.ref!==id);
+  db.caja = db.caja.filter(c=>c.ref!==id);
+  db.detalleCompras = db.detalleCompras.filter(d=>d.idCompra!==id);
+  db.compras = db.compras.filter(c=>c.id!==id);
+  guardarDB();
+  renderTablaCompras();
+  renderComprasKPIs();
 }
 
 function renderComprasKPIs() {
